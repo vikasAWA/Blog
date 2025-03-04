@@ -19,7 +19,7 @@ def BlogCard(fname):
     with open(f"posts/{fname}") as f: content = f.read()
     meta = content.split('---')[1]
     meta = yaml.safe_load(meta)
-    return Card(DivHStacked(
+    return Container(Card(DivHStacked(
         Img(src=meta['image'], style='width:200px'), 
         Div(
             A(H3(meta['title']), href=blog_post.to(fname=fname)), 
@@ -35,7 +35,7 @@ def BlogCard(fname):
             
             cls='space-y-3'
         )
-    ), cls=[CardT.hover])
+    ), cls=[CardT.hover]), cls='p-10')
     
     
 def social_media():
@@ -58,7 +58,7 @@ def about_me():
     return BlogNav(), Card(
         DivLAligned(
             DiceBearAvatar("vawa", h=24, w=24),
-            Div(H3("Vikas Awasthi"), Div(render_md(content)))),
+            Div(H3("Vikas Awasthi"), Div(render_md(content), cls=TextT.muted))),
         footer=DivFullySpaced(
             DivHStacked(UkIcon("map-pin", height=16), P("remote")),
             social_media()))
