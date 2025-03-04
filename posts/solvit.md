@@ -2,11 +2,11 @@
 ---
 email: vik@gmail.com
 author: Vikas Awasthi
-date: 02/24/2025
+date: 03/04/2025
 description: This blog introduces "How To Solve It With Code," a course by fast.ai and Answer.AI, teaching "Dialog Engineering" – a collaborative coding approach using AI tools like "solveit" to solve problems. It emphasizes human-AI partnership, breaking down complex tasks into smaller, manageable steps, to create understandable, maintainable code. The course aims to empower individuals to leverage AI for various applications beyond traditional app development.
 image: /images/solvit.jpeg
 title:  A New Way of Solving
-categories: ["Blog", "Getting Started", "Introduction"]
+categories: ["Solveit", "AI", "Tech"]
 ---
 
 # ✨ A New Way of Solving
