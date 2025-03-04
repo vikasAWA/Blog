@@ -97,7 +97,7 @@ But Solveit wasn’t just about puzzles—it empowered me to build **real projec
 3. **Mathematical Visualizations** – Inspired by a YouTube video, I explored fractals:
 🔺 [Sierpinski Triangle](https://gist.github.com/vikasAWA/8a46d87a2b072342fbabb50a69a25d6a)
 
-4. **This Blog!** – This Blog! – Built using [FastHTML](https://fastht.ml/) and [MonsterUI](https://monsterui.answer.ai/), frameworks introduced in the course that made sharing my projects effortless. Please read this beautiful post [MonsterUI- Bringing Beautiful UI to FastHTML](https://www.answer.ai/posts/2025-01-15-monsterui.html) by Isaac Flath, Jeremy Howard, & Audrey Roy Greenfeld.
+4. **[This Blog!](https://github.com/vikasAWA/Blog)** – This Blog! – Built using [FastHTML](https://fastht.ml/) and [MonsterUI](https://monsterui.answer.ai/), frameworks introduced in the course that made sharing my projects effortless. Please read this beautiful post [MonsterUI- Bringing Beautiful UI to FastHTML](https://www.answer.ai/posts/2025-01-15-monsterui.html) by Isaac Flath, Jeremy Howard, & Audrey Roy Greenfeld.
 
 
 These things I shared are just the tip of the iceberg—there were many other incredible aspects of this course. One standout was the introduction of **ShellSage – Your AI Bash Buddy**.
