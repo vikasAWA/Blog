@@ -75,14 +75,19 @@ Understanding the different types of AI prompts allows you to interact more effe
 
 
 ### **Chain-of-Thought Prompting** 🧩🤔💡
+
 **Definition:** Encouraging AI to break complex problems into sequential steps.
 
-**Example:**
-*You: "If apples cost $2 each and oranges cost $3 each, how much for 3 apples and 2 oranges? Think step by step."*
+**Example:**  
+**You:** *"If apples cost 2 each and oranges cost $3 each, how much for 3 apples and 2 oranges? Think step by step."*  
 
-*AI: "Step 1: 3 apples × $2 = $6. Step 2: 2 oranges × $3 = $6. Step 3: Total cost = $6 + $6 = $12."*
+**AI:**  
+- *Step 1: 3 apples × $2 = $6.*  
+- *Step 2: 2 oranges × $3 = $6.*  
+- *Step 3: Total cost = $6 + $6 = $12.*  
 
 📝 **Activity:** Ask AI to explain complex problems step by step. Compare different AI models! 🧠🧩
+
 
 
 ### **Self-Consistency Prompting** 🔄✅🤖
