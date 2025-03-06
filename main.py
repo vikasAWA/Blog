@@ -65,7 +65,7 @@ def about_me():
 
 @rt
 def index():
-    return  BlogNav(), Div(H3("My Blog", cls=(TextT.bold, "mb-5 ml-10"))), Grid(*map(BlogCard, os.listdir('posts')),  cols=1)
+    return  BlogNav(), Grid(*map(BlogCard, os.listdir('posts')),  cols=1)
 
 @rt
 def theme():
