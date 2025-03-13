@@ -70,8 +70,46 @@ def about_me():
             social_media()))
 
 @rt
-def index():
-    return  BlogNav(), Grid(*map(BlogCard, os.listdir('posts')),  cols=1)
+def index(page: str = "1"):
+    page = int(page)
+    # Get all post filenames
+    all_posts = os.listdir('posts')
+    
+    # Set how many posts per page
+    posts_per_page = 5
+    
+    # Calculate total pages
+    total_pages = (len(all_posts) + posts_per_page - 1) // posts_per_page
+    
+    # Ensure page is valid
+    page = max(1, min(page, total_pages))
+    
+    # Get posts for current page
+    start_idx = (page - 1) * posts_per_page
+    end_idx = start_idx + posts_per_page
+    current_posts = all_posts[start_idx:end_idx]
+    
+    # Create pagination controls
+    pagination = DivFullySpaced(
+        A("← Previous", 
+        href=index.to(page=page-1) if page > 1 else "#",
+        cls=ButtonT.secondary, 
+        disabled=page <= 1),
+        P(f"Page {page} of {total_pages}", cls=TextT.muted),
+        A("Next →", 
+        href=index.to(page=page+1) if page < total_pages else "#",
+        cls=ButtonT.secondary,
+        disabled=page >= total_pages)
+    )
+
+    
+    return BlogNav(), Container(
+        H2("My Blog"),
+        Grid(*map(BlogCard, current_posts), cols=1),
+        pagination,
+        cls='p-10'
+    )
+
 
 @rt
 def theme():
