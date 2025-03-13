@@ -19,12 +19,31 @@ def BlogNav(search_query=""):
         ),
         brand=H3("Vikas Awasthi", cls=TextT.muted)
     )
+    
+def calculate_reading_time(text):
+    # Count words in the text
+    word_count = len(text.split())
+    
+    # Average reading speed (words per minute)
+    reading_speed = 200
+    
+    # Calculate reading time in minutes
+    minutes = max(1, round(word_count / reading_speed))
+    
+    return f"{minutes} min read"
 
 
 def BlogCard(fname):
     with open(f"posts/{fname}") as f: content = f.read()
     meta = content.split('---')[1]
     meta = yaml.safe_load(meta)
+    
+    # Get the main content (after the second ---)
+    main_content = content.split('---')[2]
+    
+    # Calculate reading time
+    reading_time = calculate_reading_time(main_content)
+    
     return Container(Card(DivHStacked(
         Img(src=meta['image'], style='width:200px'), 
         Div(
@@ -36,12 +55,18 @@ def BlogCard(fname):
             ),
             DivFullySpaced(
                 DivLAligned(*map(Label, meta['categories'])),
+                P(reading_time, cls=(TextT.muted, TextT.sm, "flex items-center")),
+            ),
+            DivFullySpaced(
+                P(""),  # Empty element for spacing
                 A("Read More", href=blog_post.to(fname=fname), 
                   cls=("uk-button rounded-md px-2 px-2", ButtonT.primary))),
             
             cls='space-y-3'
         )
     ), cls=[CardT.hover]), cls='p-10')
+
+
     
     
 def social_media():
@@ -55,8 +80,21 @@ def social_media():
 @rt   
 def blog_post(fname:str):
     with open(f"posts/{fname}") as f: content = f.read()
-    content = content.split('---')[2]
-    return BlogNav(), Container(render_md(content), cls='p-10')
+    main_content = content.split('---')[2]
+    meta = content.split('---')[1]
+    meta = yaml.safe_load(meta)
+    
+    reading_time = calculate_reading_time(main_content)
+    
+    return BlogNav(), Container(
+        DivFullySpaced(
+            H1(meta['title']),
+            P(reading_time, cls=(TextT.muted, TextT.sm))
+        ),
+        render_md(main_content), 
+        cls='p-10'
+    )
+
 
 @rt
 def about_me():
