@@ -1,8 +1,90 @@
 from fasthtml.common import*
 from monsterui.all import *
 import os, yaml
+import re
+from html import escape
 
-app, rt = fast_app(hdrs=Theme.blue.headers(), live=True)
+
+app, rt = fast_app(
+    hdrs=(
+        Theme.blue.headers(),
+        Style("""
+        .toc-container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.25rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+        }
+        .sticky-toc {
+            position: sticky;
+            top: 2rem;
+        }
+        .toc-container h4 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .toc-container ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+        .toc-level-0 { 
+            margin-left: 0; 
+            font-weight: 600; 
+            margin-bottom: 0.6rem;
+        }
+        .toc-level-1 { 
+            margin-left: 1rem; 
+            margin-bottom: 0.5rem;
+        }
+        .toc-level-2 { 
+            margin-left: 2rem; 
+            font-size: 0.9rem; 
+            margin-bottom: 0.4rem;
+        }
+        .toc-level-3 { 
+            margin-left: 2.5rem; 
+            font-size: 0.85rem; 
+            color: #555; 
+            margin-bottom: 0.3rem;
+        }
+        .toc-level-4, .toc-level-5 { 
+            display: none; /* Hide deeper levels for cleaner TOC */
+        }
+        
+        /* Style TOC links */
+        .toc-container a {
+            text-decoration: none;
+            color: #2c5282;
+            transition: color 0.2s;
+            display: block;
+            padding: 2px 0;
+        }
+        
+        .toc-container a:hover {
+            color: #1a365d;
+            text-decoration: none;
+            background-color: #f0f4f8;
+            border-radius: 3px;
+            padding-left: 5px;
+        }
+        
+        /* Main content styling */
+        .content-column {
+            padding-right: 2rem;
+        }
+        """)
+    ),
+    live=True
+)
+
+
+
 
 def BlogNav(search_query=""):
     return NavBar(
@@ -76,22 +158,85 @@ def social_media():
                 UkIconLink("twitter", height=16, href="https://x.com/Vikas_awa")
 )
 
+def generate_table_of_contents(markdown_content):
+    # Find all headings in the markdown content
+    heading_pattern = re.compile(r'^(#{1,6})\s+(.+?)$', re.MULTILINE)
+    headings = heading_pattern.findall(markdown_content)
+    
+    if not headings:
+        return []  # No headings found, return empty list
+    
+    # Create TOC items
+    toc_items = []
+    
+    for heading_level, heading_text in headings:
+        # Remove emojis and other special characters
+        clean_text = re.sub(r'[^\w\s\-.,:]', '', heading_text)
+        clean_text = clean_text.strip()
+        
+        # Create an ID for the heading (for linking)
+        heading_id = clean_text.lower().replace(' ', '-').replace('.', '').replace(',', '')
+        heading_id = re.sub(r'[^a-z0-9-]', '', heading_id)
+        
+        # Determine the indentation level (heading level - 1)
+        level = len(heading_level) - 1
+        
+        # Add to TOC items
+        toc_items.append((level, clean_text, heading_id))
+    
+    return toc_items
+
 
 @rt   
 def blog_post(fname:str):
     with open(f"posts/{fname}") as f: content = f.read()
-    main_content = content.split('---')[2]
     meta = content.split('---')[1]
     meta = yaml.safe_load(meta)
+    main_content = content.split('---')[2]
     
+    # Calculate reading time
     reading_time = calculate_reading_time(main_content)
+    
+    # Generate TOC
+    toc_items = generate_table_of_contents(main_content)
+    
+    # Modify markdown content to add IDs to headings
+    heading_pattern = re.compile(r'^(#{1,6})\s+(.+?)$', re.MULTILINE)
+    
+    def add_heading_id(match):
+        heading_level, heading_text = match.groups()
+        # Remove emojis and special characters for the ID
+        clean_text = re.sub(r'[^\w\s\-.,:]', '', heading_text)
+        clean_text = clean_text.strip()
+        
+        heading_id = clean_text.lower().replace(' ', '-').replace('.', '').replace(',', '')
+        heading_id = re.sub(r'[^a-z0-9-]', '', heading_id)
+        
+        # Keep original heading text for display
+        return f'{heading_level} <a id="{heading_id}"></a>{heading_text}'
+    
+    modified_content = heading_pattern.sub(add_heading_id, main_content)
     
     return BlogNav(), Container(
         DivFullySpaced(
             H1(meta['title']),
             P(reading_time, cls=(TextT.muted, TextT.sm))
         ),
-        render_md(main_content), 
+        # Create a two-column layout with main content and TOC sidebar
+        Grid(
+            # Main content column
+            Div(render_md(modified_content), cls="col-span-3 content-column"),
+            
+            # TOC sidebar column (only if TOC exists)
+            Div(Card(
+                Ul(*[Li(A(text, href=f"#{heading_id}"), cls=f"toc-level-{level}") 
+                     for level, text, heading_id in toc_items if level < 4]) if toc_items else "",
+                header=H4("Contents"),
+                cls="toc-container sticky-toc"
+            ), cls="col-span-1") if toc_items else "",
+            
+            cols=4,  # 4 columns total (3 for content, 1 for TOC)
+        ),
         cls='p-10'
     )
 
