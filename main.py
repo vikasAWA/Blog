@@ -5,81 +5,178 @@ import re
 from html import escape
 
 
+# Update your app initialization with the complete CSS
 app, rt = fast_app(
     hdrs=(
         Theme.blue.headers(),
         Style("""
-    /* Blog content wrapper layout */
-    .blog-content-wrapper {
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .blog-main-content {
-        width: 100%;
-        order: 1;
-    }
-    
-    .blog-toc {
-        width: 100%;
-        order: 2;
-        margin-top: 2rem;
-    }
-    
-    /* Desktop TOC styling */
-    .desktop-toc {
-        display: none; /* Hidden by default on mobile */
-    }
-    
-    /* Mobile TOC styling */
-    .mobile-toc {
-        display: block; /* Visible by default on mobile */
-        margin-bottom: 2rem;
-    }
-    
-    /* Responsive adjustments */
-    @media (min-width: 768px) {
+        /* Blog content wrapper layout */
         .blog-content-wrapper {
-            flex-direction: row;
-            gap: 2rem;
+            display: flex;
+            flex-direction: column;
         }
         
         .blog-main-content {
-            width: 70%;
+            width: 100%;
             order: 1;
         }
         
         .blog-toc {
-            width: 30%;
+            width: 100%;
             order: 2;
-            margin-top: 0;
+            margin-top: 2rem;
         }
         
-        .mobile-toc {
-            display: none; /* Hide on larger screens */
-        }
-        
+        /* Desktop TOC styling */
         .desktop-toc {
-            display: block; /* Show on larger screens */
+            display: none; /* Hidden by default on mobile */
         }
-    }
-    
-    .toc-container {
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        padding: 1.25rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border: 1px solid #e0e0e0;
-    }
-    
-    .sticky-toc {
-        position: sticky;
-        top: 2rem;
-    }
-    
-    /* Rest of your TOC styling... */
-""")
-
+        
+        /* Mobile TOC styling */
+        .mobile-toc {
+            display: block; /* Visible by default on mobile */
+            margin-bottom: 2rem;
+        }
+        
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+            .blog-content-wrapper {
+                flex-direction: row;
+                gap: 2rem;
+            }
+            
+            .blog-main-content {
+                width: 70%;
+                order: 1;
+            }
+            
+            .blog-toc {
+                width: 30%;
+                order: 2;
+                margin-top: 0;
+            }
+            
+            .mobile-toc {
+                display: none; /* Hide on larger screens */
+            }
+            
+            .desktop-toc {
+                display: block; /* Show on larger screens */
+            }
+        }
+        
+        /* TOC container with theme-aware colors */
+        .toc-container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.25rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+        }
+        
+        .sticky-toc {
+            position: sticky;
+            top: 2rem;
+        }
+        
+        /* Dark theme adjustments */
+        [data-theme="dark"] .toc-container {
+            background-color: #2d3748;
+            border-color: #4a5568;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* TOC header styling */
+        .toc-container h4 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 1.1rem;
+            color: #333;
+        }
+        
+        [data-theme="dark"] .toc-container h4 {
+            color: #e2e8f0;
+            border-bottom-color: #4a5568;
+        }
+        
+        /* TOC links styling with theme awareness */
+        .toc-container a {
+            text-decoration: none;
+            color: #2c5282;
+            transition: color 0.2s, background-color 0.2s;
+            display: block;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        [data-theme="dark"] .toc-container a {
+            color: #90cdf4;
+        }
+        
+        .toc-container a:hover {
+            color: #1a365d;
+            background-color: #f0f4f8;
+        }
+        
+        [data-theme="dark"] .toc-container a:hover {
+            color: #bee3f8;
+            background-color: #2d3748;
+        }
+        
+        /* TOC list styling */
+        .toc-container ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+        
+        /* Level styling with theme awareness */
+        .toc-level-0 { 
+            margin-left: 0; 
+            font-weight: 600; 
+            margin-bottom: 0.6rem;
+        }
+        
+        .toc-level-1 { 
+            margin-left: 1rem; 
+            margin-bottom: 0.5rem;
+        }
+        
+        .toc-level-2 { 
+            margin-left: 2rem; 
+            font-size: 0.9rem; 
+            margin-bottom: 0.4rem;
+        }
+        
+        .toc-level-3 { 
+            margin-left: 2.5rem; 
+            font-size: 0.85rem; 
+            color: #555; 
+            margin-bottom: 0.3rem;
+        }
+        
+        [data-theme="dark"] .toc-level-3 {
+            color: #cbd5e0;
+        }
+        
+        .toc-level-4, .toc-level-5 { 
+            display: none;
+        }
+        
+        /* Also make blog cards responsive */
+        @media (max-width: 768px) {
+            .blog-card-container {
+                flex-direction: column;
+            }
+            .blog-card-image {
+                width: 100% !important;
+                max-height: 200px;
+                object-fit: cover;
+            }
+        }
+        """)
     ),
     live=True
 )
