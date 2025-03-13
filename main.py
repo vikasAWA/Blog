@@ -9,79 +9,81 @@ app, rt = fast_app(
     hdrs=(
         Theme.blue.headers(),
         Style("""
-        .toc-container {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 1.25rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border: 1px solid #e0e0e0;
+    /* Blog content wrapper layout */
+    .blog-content-wrapper {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .blog-main-content {
+        width: 100%;
+        order: 1;
+    }
+    
+    .blog-toc {
+        width: 100%;
+        order: 2;
+        margin-top: 2rem;
+    }
+    
+    /* Desktop TOC styling */
+    .desktop-toc {
+        display: none; /* Hidden by default on mobile */
+    }
+    
+    /* Mobile TOC styling */
+    .mobile-toc {
+        display: block; /* Visible by default on mobile */
+        margin-bottom: 2rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (min-width: 768px) {
+        .blog-content-wrapper {
+            flex-direction: row;
+            gap: 2rem;
         }
-        .sticky-toc {
-            position: sticky;
-            top: 2rem;
+        
+        .blog-main-content {
+            width: 70%;
+            order: 1;
         }
-        .toc-container h4 {
+        
+        .blog-toc {
+            width: 30%;
+            order: 2;
             margin-top: 0;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #e0e0e0;
-            font-size: 1.1rem;
-            color: #333;
-        }
-        .toc-container ul {
-            list-style-type: none;
-            padding-left: 0;
-            margin-bottom: 0;
-        }
-        .toc-level-0 { 
-            margin-left: 0; 
-            font-weight: 600; 
-            margin-bottom: 0.6rem;
-        }
-        .toc-level-1 { 
-            margin-left: 1rem; 
-            margin-bottom: 0.5rem;
-        }
-        .toc-level-2 { 
-            margin-left: 2rem; 
-            font-size: 0.9rem; 
-            margin-bottom: 0.4rem;
-        }
-        .toc-level-3 { 
-            margin-left: 2.5rem; 
-            font-size: 0.85rem; 
-            color: #555; 
-            margin-bottom: 0.3rem;
-        }
-        .toc-level-4, .toc-level-5 { 
-            display: none; /* Hide deeper levels for cleaner TOC */
         }
         
-        /* Style TOC links */
-        .toc-container a {
-            text-decoration: none;
-            color: #2c5282;
-            transition: color 0.2s;
-            display: block;
-            padding: 2px 0;
+        .mobile-toc {
+            display: none; /* Hide on larger screens */
         }
         
-        .toc-container a:hover {
-            color: #1a365d;
-            text-decoration: none;
-            background-color: #f0f4f8;
-            border-radius: 3px;
-            padding-left: 5px;
+        .desktop-toc {
+            display: block; /* Show on larger screens */
         }
-        
-        /* Main content styling */
-        .content-column {
-            padding-right: 2rem;
-        }
-        """)
+    }
+    
+    .toc-container {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.25rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e0e0e0;
+    }
+    
+    .sticky-toc {
+        position: sticky;
+        top: 2rem;
+    }
+    
+    /* Rest of your TOC styling... */
+""")
+
     ),
     live=True
 )
+
 
 
 
@@ -127,7 +129,7 @@ def BlogCard(fname):
     reading_time = calculate_reading_time(main_content)
     
     return Container(Card(DivHStacked(
-        Img(src=meta['image'], style='width:200px'), 
+        Img(src=meta['image'], style='width:200px', cls="blog-card-image"), 
         Div(
             A(H3(meta['title']), href=blog_post.to(fname=fname)), 
             P(meta['description']),
@@ -145,7 +147,8 @@ def BlogCard(fname):
                   cls=("uk-button rounded-md px-2 px-2", ButtonT.primary))),
             
             cls='space-y-3'
-        )
+        ),
+        cls="blog-card-container"
     ), cls=[CardT.hover]), cls='p-10')
 
 
@@ -205,40 +208,44 @@ def blog_post(fname:str):
     
     def add_heading_id(match):
         heading_level, heading_text = match.groups()
-        # Remove emojis and special characters for the ID
         clean_text = re.sub(r'[^\w\s\-.,:]', '', heading_text)
         clean_text = clean_text.strip()
         
         heading_id = clean_text.lower().replace(' ', '-').replace('.', '').replace(',', '')
         heading_id = re.sub(r'[^a-z0-9-]', '', heading_id)
         
-        # Keep original heading text for display
         return f'{heading_level} <a id="{heading_id}"></a>{heading_text}'
     
     modified_content = heading_pattern.sub(add_heading_id, main_content)
+    
+    # TOC component
+    toc_component = Card(
+        Ul(*[Li(A(text, href=f"#{heading_id}"), cls=f"toc-level-{level}") 
+             for level, text, heading_id in toc_items if level < 4]) if toc_items else "",
+        header=H4("Contents"),
+        cls="toc-container sticky-toc"
+    ) if toc_items else ""
     
     return BlogNav(), Container(
         DivFullySpaced(
             H1(meta['title']),
             P(reading_time, cls=(TextT.muted, TextT.sm))
         ),
-        # Create a two-column layout with main content and TOC sidebar
-        Grid(
+        
+        # Mobile TOC (visible only on small screens)
+        Div(toc_component, cls="mobile-toc"),
+        
+        # Desktop layout with explicit order of columns
+        Div(cls="blog-content-wrapper")(
             # Main content column
-            Div(render_md(modified_content), cls="col-span-3 content-column"),
+            Div(render_md(modified_content), cls="blog-main-content"),
             
-            # TOC sidebar column (only if TOC exists)
-            Div(Card(
-                Ul(*[Li(A(text, href=f"#{heading_id}"), cls=f"toc-level-{level}") 
-                     for level, text, heading_id in toc_items if level < 4]) if toc_items else "",
-                header=H4("Contents"),
-                cls="toc-container sticky-toc"
-            ), cls="col-span-1") if toc_items else "",
-            
-            cols=4,  # 4 columns total (3 for content, 1 for TOC)
+            # TOC sidebar column (only if TOC exists and on larger screens)
+            Div(toc_component, cls="blog-toc desktop-toc") if toc_items else ""
         ),
         cls='p-10'
     )
+
 
 
 @rt
