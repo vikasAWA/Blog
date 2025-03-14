@@ -2,6 +2,8 @@ from fasthtml.common import*
 from monsterui.all import *
 import os, yaml
 import re
+import json
+from pathlib import Path
 from html import escape
 
 
@@ -176,13 +178,185 @@ app, rt = fast_app(
                 object-fit: cover;
             }
         }
+        /* Social sharing buttons */
+        .social-share-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .social-share-buttons a {
+            transition: transform 0.2s;
+        }
+
+        .social-share-buttons a:hover {
+            transform: translateY(-3px);
+        }
+
+        /* Comments styling */
+        .comments-section {
+            border-top: 1px solid #e0e0e0;
+            padding-top: 2rem;
+        }
+
+        [data-theme="dark"] .comments-section {
+            border-top-color: #4a5568;
+        }
+
         """)
     ),
     live=True
 )
 
 
+# Function to update view count
+def update_view_count(post_id):
+    view_file = Path('views.json')
+    
+    # Create file if it doesn't exist
+    if not view_file.exists():
+        with open(view_file, 'w') as f:
+            json.dump({}, f)
+    
+    # Read current views
+    with open(view_file, 'r') as f:
+        views = json.load(f)
+    
+    # Update views for this post
+    views[post_id] = views.get(post_id, 0) + 1
+    
+    # Save updated views
+    with open(view_file, 'w') as f:
+        json.dump(views, f)
+    
+    return views[post_id]
 
+# Function to get view count
+def get_view_count(post_id):
+    view_file = Path('views.json')
+    
+    # Return 0 if file doesn't exist
+    if not view_file.exists():
+        return 0
+    
+    # Read current views
+    with open(view_file, 'r') as f:
+        views = json.load(f)
+    
+    return views.get(post_id, 0)
+
+def SocialShareButtons(url, title):
+    # URL encode the title and full URL
+    encoded_url = escape(url)
+    encoded_title = escape(title)
+    
+    return Div(
+        A(UkIcon("facebook", height=20), 
+          href=f"https://www.facebook.com/sharer/sharer.php?u={encoded_url}",
+          target="_blank", rel="noopener", 
+          cls="uk-icon-button uk-margin-small-right"),
+        A(UkIcon("twitter", height=20), 
+          href=f"https://twitter.com/intent/tweet?text={encoded_title}&url={encoded_url}",
+          target="_blank", rel="noopener", 
+          cls="uk-icon-button uk-margin-small-right"),
+        A(UkIcon("linkedin", height=20), 
+          href=f"https://www.linkedin.com/sharing/share-offsite/?url={encoded_url}",
+          target="_blank", rel="noopener", 
+          cls="uk-icon-button uk-margin-small-right"),
+        A(UkIcon("mail", height=20), 
+          href=f"mailto:?subject={encoded_title}&body={encoded_url}",
+          cls="uk-icon-button"),
+        cls="social-share-buttons uk-margin-medium-top"
+    )
+
+from datetime import datetime
+
+# Function to save a new comment
+def save_comment(post_id, name, email, comment):
+    comments_file = Path(f'comments/{post_id}.json')
+    comments_dir = Path('comments')
+    
+    # Create directory if it doesn't exist
+    if not comments_dir.exists():
+        comments_dir.mkdir()
+    
+    # Create file if it doesn't exist
+    if not comments_file.exists():
+        with open(comments_file, 'w') as f:
+            json.dump([], f)
+    
+    # Read current comments
+    with open(comments_file, 'r') as f:
+        comments = json.load(f)
+    
+    # Add new comment
+    comments.append({
+        'name': name,
+        'email': email,
+        'comment': comment,
+        'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    })
+    
+    # Save updated comments
+    with open(comments_file, 'w') as f:
+        json.dump(comments, f)
+    
+    return len(comments)
+
+# Function to get comments
+def get_comments(post_id):
+    comments_file = Path(f'comments/{post_id}.json')
+    
+    # Return empty list if file doesn't exist
+    if not comments_file.exists():
+        return []
+    
+    # Read current comments
+    with open(comments_file, 'r') as f:
+        comments = json.load(f)
+    
+    return comments
+
+# Component to display a single comment
+def CommentItem(comment):
+    return Card(
+        Div(
+            DivLAligned(
+                DiceBearAvatar(comment['name'], h=10, w=10),
+                Div(
+                    H4(comment['name'], cls=TextT.bold),
+                    P(comment['date'], cls=TextT.muted)
+                )
+            ),
+            P(comment['comment'], cls="uk-margin-top")
+        ),
+        cls="uk-margin-medium-bottom"
+    )
+
+# Component to display comment form
+def CommentForm(post_id):
+    return Form(
+        H3("Leave a Comment", cls="uk-margin-medium-top"),
+        Grid(
+            LabelInput("Name", id="comment_name", required=True),
+            LabelInput("Email", id="comment_email", type="email", required=True),
+            cols=2
+        ),
+        LabelTextArea("Comment", id="comment_content", required=True),
+        Input(type="hidden", name="post_id", value=post_id),
+        Button("Submit Comment", type="submit", cls=ButtonT.primary),
+        method="post", action=save_comment_route.to()
+    )
+
+# Component to display comments section
+def CommentsSection(post_id):
+    comments = get_comments(post_id)
+    
+    return Div(
+        H3(f"Comments ({len(comments)})", cls="uk-margin-large-top"),
+        Div(*[CommentItem(comment) for comment in comments]) if comments else P("No comments yet. Be the first to comment!"),
+        CommentForm(post_id),
+        cls="comments-section uk-margin-large-top"
+    )
 
 
 def BlogNav(search_query=""):
@@ -243,7 +417,7 @@ def BlogCard(fname):
                 A("Read More", href=blog_post.to(fname=fname), 
                   cls=("uk-button rounded-md px-2 px-2", ButtonT.primary))),
             
-            cls='space-y-3'
+            cls='space-y-3 p-5'
         ),
         cls="blog-card-container"
     ), cls=[CardT.hover]), cls='p-10')
@@ -288,7 +462,10 @@ def generate_table_of_contents(markdown_content):
 
 
 @rt   
-def blog_post(fname:str):
+def blog_post(fname: str):
+    # Update view count
+    views = update_view_count(fname)
+    
     with open(f"posts/{fname}") as f: content = f.read()
     meta = content.split('---')[1]
     meta = yaml.safe_load(meta)
@@ -323,10 +500,28 @@ def blog_post(fname:str):
         cls="toc-container sticky-toc"
     ) if toc_items else ""
     
+    # Get current URL for sharing
+    current_url = f"{escape(os.environ.get('BASE_URL', 'https://yourblog.com'))}{blog_post.to(fname=fname)}"
+    
+    # Post metadata with view count
+    post_meta = DivFullySpaced(
+        DivLAligned(
+            P(meta['date'], cls=TextT.muted),
+            P("•", cls=TextT.muted),
+            P(reading_time, cls=TextT.muted),
+            P("•", cls=TextT.muted),
+            P(f"{views} views", cls=TextT.muted),
+            cls="uk-flex uk-flex-middle gap-2"
+        ),
+        DivLAligned(*map(Label, meta['categories']))
+    )
+    
     return BlogNav(), Container(
-        DivFullySpaced(
+        # Post header
+        Div(
             H1(meta['title']),
-            P(reading_time, cls=(TextT.muted, TextT.sm))
+            post_meta,
+            cls="uk-margin-medium-bottom space-y-2"
         ),
         
         # Mobile TOC (visible only on small screens)
@@ -335,7 +530,18 @@ def blog_post(fname:str):
         # Desktop layout with explicit order of columns
         Div(cls="blog-content-wrapper")(
             # Main content column
-            Div(render_md(modified_content), cls="blog-main-content"),
+            Div(
+                # Main content
+                render_md(modified_content),
+                
+                # Social sharing
+                SocialShareButtons(current_url, meta['title']),
+                
+                # Comments section
+                CommentsSection(fname),
+                
+                cls="blog-main-content"
+            ),
             
             # TOC sidebar column (only if TOC exists and on larger screens)
             Div(toc_component, cls="blog-toc desktop-toc") if toc_items else ""
@@ -343,6 +549,13 @@ def blog_post(fname:str):
         cls='p-10'
     )
 
+@rt
+def save_comment_route(post_id: str, comment_name: str, comment_email: str, comment_content: str):
+    # Save the comment
+    save_comment(post_id, comment_name, comment_email, comment_content)
+    
+    # Redirect back to the blog post
+    return RedirectResponse(url=blog_post.to(fname=post_id))
 
 
 @rt
