@@ -575,6 +575,26 @@ def index(page: str = "1"):
     # Get all post filenames
     all_posts = os.listdir('posts')
     
+    # Sort posts by date (newest first)
+    sorted_posts = []
+    for fname in all_posts:
+        try:
+            with open(f"posts/{fname}") as f:
+                content = f.read()
+            meta = content.split('---')[1]
+            meta = yaml.safe_load(meta)
+            # Add filename and date to the list for sorting
+            sorted_posts.append((fname, meta.get('date')))
+        except:
+            # Skip files with errors
+            pass
+    
+    # Sort by date in descending order (newest first)
+    sorted_posts.sort(key=lambda x: x[1], reverse=True)
+    
+    # Extract just the filenames after sorting
+    all_posts = [post[0] for post in sorted_posts]
+    
     # Set how many posts per page
     posts_per_page = 5
     
