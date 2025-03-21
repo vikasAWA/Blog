@@ -6,7 +6,7 @@ date: 03/20/2025
 description: Whether you need to summarize a long document, extract key points, translate content, or transform it into a different format, ContentLens can help.
 image: /images/content_lens.jpeg
 title:  🔍 ContentLens | AI-Powered Document Insights
-categories: ["ContentLens", "AI", "fastHTML", "MonsterUI"]
+categories: ["ContentLens", "AI", "fastHTML", "MonsterUI", "Project"]
 ---
 
 ## Building ContentLens: My Journey Creating an AI-Powered Document Processing App
