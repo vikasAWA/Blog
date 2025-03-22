@@ -207,10 +207,14 @@ app, rt = fast_app(
     live=True
 )
 
+# Get the storage path (use volume in production, local directory in development)
+STORAGE_PATH = os.environ.get('RAILWAY_VOLUME_MOUNT_PATH', '')
+if not STORAGE_PATH:
+    STORAGE_PATH = '.'  # Current directory for local development
 
 # Function to update view count
 def update_view_count(post_id):
-    view_file = Path('views.json')
+    view_file = Path(f"{STORAGE_PATH}/views.json")
     
     # Create file if it doesn't exist
     if not view_file.exists():
@@ -272,12 +276,12 @@ from datetime import datetime
 
 # Function to save a new comment
 def save_comment(post_id, name, email, comment):
-    comments_file = Path(f'comments/{post_id}.json')
-    comments_dir = Path('comments')
+    comments_dir = Path(f"{STORAGE_PATH}/comments")
+    comments_file = comments_dir / f"{post_id}.json"
     
     # Create directory if it doesn't exist
     if not comments_dir.exists():
-        comments_dir.mkdir()
+        comments_dir.mkdir(parents=True, exist_ok=True)
     
     # Create file if it doesn't exist
     if not comments_file.exists():
