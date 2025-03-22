@@ -236,7 +236,7 @@ def update_view_count(post_id):
 
 # Function to get view count
 def get_view_count(post_id):
-    view_file = Path('views.json')
+    view_file = Path(f"{STORAGE_PATH}/views.json")
     
     # Return 0 if file doesn't exist
     if not view_file.exists():
@@ -247,6 +247,7 @@ def get_view_count(post_id):
         views = json.load(f)
     
     return views.get(post_id, 0)
+
 
 def SocialShareButtons(url, title):
     # URL encode the title and full URL
@@ -308,17 +309,28 @@ def save_comment(post_id, name, email, comment):
 
 # Function to get comments
 def get_comments(post_id):
-    comments_file = Path(f'comments/{post_id}.json')
+    comments_dir = Path(f"{STORAGE_PATH}/comments")
+    comments_file = comments_dir / f"{post_id}.json"
+    
+    # Print debug info
+    print(f"Looking for comments at {comments_file}")
     
     # Return empty list if file doesn't exist
     if not comments_file.exists():
+        print(f"No comments file found for {post_id}")
         return []
     
     # Read current comments
     with open(comments_file, 'r') as f:
-        comments = json.load(f)
+        try:
+            comments = json.load(f)
+            print(f"Found {len(comments)} comments for {post_id}")
+        except json.JSONDecodeError:
+            print(f"Error reading comments file for {post_id}")
+            comments = []
     
     return comments
+
 
 # Component to display a single comment
 def CommentItem(comment):
